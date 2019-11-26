@@ -1,0 +1,4 @@
+Split a 16384x16384 image into 4 parts, each 8192x8192:
+
+convert 16384.jpg -crop 8192x8192 +repage +adjoin result_%d.jpg
+
