@@ -18,13 +18,15 @@ void ofApp::setup()
 
     checkHardwareCapabilities();
 
-for(int rows =0; rows < NUM_IMAGES/4; rows++) {
-    for(int cols =0; cols < NUM_IMAGES/4; cols++) {
-        string filename = "tile_"+ofToString(rows+1)+"_"+ofToString(cols+1)+".jpg";
-        loader.loadFromDisk(img[rows][cols], filename);
+    for (int i = 0; i < NUM_IMAGES; i++) {
+        for (int rows = 0; rows < TILE_SIZE; rows++) {
+            for (int cols = 0; cols < TILE_SIZE; cols++) {
+                string filename = "image" + ofToString(i + 1) + "/tile_" + ofToString(rows + 1) + "_" + ofToString(cols + 1) + ".jpg";
+                loader.loadFromDisk(img[i][rows][cols], filename);
+            }
+        }
     }
-}
-
+    currentImage = 1;
     scaleFactor = 1.5;
     bDebug = true;
     currentTime = ofGetElapsedTimeMillis();
@@ -43,7 +45,7 @@ void ofApp::update()
 
     vector<Hand> hands = leap.getLeapHands();
     if (leap.isFrameNew() && hands.size()) {
-        handsFound = (unsigned int)hands.size();
+        handsFound = static_cast<unsigned int>(hands.size());
 
         leap.setMappingX(-230, 230, -ofGetWidth() / 2, ofGetWidth() / 2);
         leap.setMappingY(90, 490, -ofGetHeight() / 2, ofGetHeight() / 2);
@@ -107,28 +109,27 @@ void ofApp::draw()
     }
 
     if (loader.getProgress() < 1.0f) {
-        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4, ofGetHeight() / 2, 0, ofGetWidth() / 2, 20,5);
+        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4, ofGetHeight() / 2, 0, ofGetWidth() / 2, 20, 5);
         ofSetColor(255, 0, 0);
-        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4 + 2, ofGetHeight() / 2 + 2, 1, loader.getProgress() * (ofGetWidth() / 2) - 4, 16,5);
+        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4 + 2, ofGetHeight() / 2 + 2, 1, loader.getProgress() * (ofGetWidth() / 2) - 4, 16, 5);
     } else {
 
         ofPushMatrix();
         ofTranslate(xt, yt, zt);
         ofScale(scaleFactor, scaleFactor, scaleFactor);
-        for(int rows = 0; rows < NUM_IMAGES/4;rows++){
-            for(int cols = 0; cols < NUM_IMAGES/4;cols++){
-                if (img[rows][cols].isAllocated()) {
+        for (int rows = 0; rows < TILE_SIZE; rows++) {
+            for (int cols = 0; cols < TILE_SIZE; cols++) {
+                if (img[currentImage][rows][cols].isAllocated()) {
                     //ofSetColor(255,0,0);
-                    const float w = img[rows][cols].getWidth();
-                    const float h = img[rows][cols].getHeight();
-                    img[rows][cols].draw(-w*2 + rows*w, -h*2 + cols*h);
+                    const float w = img[currentImage][rows][cols].getWidth();
+                    const float h = img[currentImage][rows][cols].getHeight();
+                    img[currentImage][rows][cols].draw(-w * 2 + rows * w, -h * 2 + cols * h);
                 }
             }
         }
 
         ofPopMatrix();
     }
-
 
     if (bDebug) {
         cam.begin();
@@ -190,11 +191,9 @@ void ofApp::keyPressed(int key)
     if ((key == 'd') || (key == 'D')) {
         bDebug = !bDebug;
     }
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key)
-{
+    if (key == ' ') {
+        currentImage = !currentImage;
+    }
 }
 
 //--------------------------------------------------------------

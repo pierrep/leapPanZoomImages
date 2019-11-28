@@ -1,5 +1,9 @@
 bin/leapPanZoomImages
+bin/leapPanZoomImages_debug
 build/
 leapPanZoomImages.qbs.user
+bin/data/image1
+bin/data/image2
+
 
 

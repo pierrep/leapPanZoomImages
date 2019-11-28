@@ -5,17 +5,16 @@
 #include "ofxThreadedImageLoader.h"
 #include "ofxTween.h"
 
-#define NUM_IMAGES 16
+#define TILE_SIZE 4
+#define NUM_IMAGES 2
 
 class ofApp : public ofBaseApp{
     
 public:
     void setup();
     void update();
-    void draw();
-	
+    void draw();	
     void keyPressed  (int key);
-    void keyReleased(int key);
     void exit();
     void drawHands();
     void checkHardwareCapabilities();
@@ -29,8 +28,9 @@ public:
     float scaleFactor;
     float xt,yt,zt;
 
-    ofImage img[NUM_IMAGES/4][NUM_IMAGES/4];
+    ofImage img[NUM_IMAGES][TILE_SIZE][TILE_SIZE];
     ofxThreadedImageLoader loader;
+    int currentImage;
 
     bool bDebug;
 
