@@ -5,6 +5,8 @@
 #include "ofxThreadedImageLoader.h"
 #include "ofxTween.h"
 
+#define NUM_IMAGES 16
+
 class ofApp : public ofBaseApp{
     
 public:
@@ -27,11 +29,7 @@ public:
     float scaleFactor;
     float xt,yt,zt;
 
-    ofImage img;
-    ofImage img1;
-    ofImage img2;
-    ofImage img3;
-    ofImage img4;
+    ofImage img[NUM_IMAGES/4][NUM_IMAGES/4];
     ofxThreadedImageLoader loader;
 
     bool bDebug;

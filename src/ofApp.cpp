@@ -18,11 +18,12 @@ void ofApp::setup()
 
     checkHardwareCapabilities();
 
-    //loader.loadFromDisk(img, "16384.jpg");
-    loader.loadFromDisk(img1, "2.jpg");
-    loader.loadFromDisk(img2, "3.jpg");
-    loader.loadFromDisk(img3, "0.jpg");
-    loader.loadFromDisk(img4, "1.jpg");
+for(int rows =0; rows < NUM_IMAGES/4; rows++) {
+    for(int cols =0; cols < NUM_IMAGES/4; cols++) {
+        string filename = "tile_"+ofToString(rows+1)+"_"+ofToString(cols+1)+".jpg";
+        loader.loadFromDisk(img[rows][cols], filename);
+    }
+}
 
     scaleFactor = 1.5;
     bDebug = true;
@@ -111,26 +112,20 @@ void ofApp::draw()
         ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4 + 2, ofGetHeight() / 2 + 2, 1, loader.getProgress() * (ofGetWidth() / 2) - 4, 16,5);
     } else {
 
-        ofSetRectMode(OF_RECTMODE_CENTER);
         ofPushMatrix();
         ofTranslate(xt, yt, zt);
         ofScale(scaleFactor, scaleFactor, scaleFactor);
-        if (img1.isAllocated()) {
-            //ofSetColor(255,0,0);
-            img1.draw(-img1.getWidth() / 2, img1.getHeight() / 2);
+        for(int rows = 0; rows < NUM_IMAGES/4;rows++){
+            for(int cols = 0; cols < NUM_IMAGES/4;cols++){
+                if (img[rows][cols].isAllocated()) {
+                    //ofSetColor(255,0,0);
+                    const float w = img[rows][cols].getWidth();
+                    const float h = img[rows][cols].getHeight();
+                    img[rows][cols].draw(-w*2 + rows*w, -h*2 + cols*h);
+                }
+            }
         }
-        if (img2.isAllocated()) {
-            //ofSetColor(0,255,0);
-            img2.draw(img2.getWidth() / 2, img2.getHeight() / 2);
-        }
-        if (img3.isAllocated()) {
-            //ofSetColor(0,0,255);
-            img3.draw(-img3.getWidth() / 2, -img3.getHeight() / 2);
-        }
-        if (img4.isAllocated()) {
-            //ofSetColor(255,0,255);
-            img4.draw(img4.getWidth() / 2, -img4.getHeight() / 2);
-        }
+
         ofPopMatrix();
     }
 

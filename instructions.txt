@@ -1,4 +1,5 @@
-Split a 16384x16384 image into 4 parts, each 8192x8192:
+Split a 61652x41432 image into 16 parts, each 15431x1035:
 
-convert 16384.jpg -crop 8192x8192 +repage +adjoin result_%d.jpg
+ convert SEM_61652x41432.jpg -crop 15431x10358 -set filename:tile "%[fx:page.x/15431+1]_%[fx:page.y/10358+1]" +repage +adjoin "tile_%[filename:tile].jpg"
+
 
