@@ -1,4 +1,4 @@
 ofxLeapMotion2
-ofxThreadedImageLoader
+ofxThreadedImageLoaderProgress
 ofxTween
 ofxPoco

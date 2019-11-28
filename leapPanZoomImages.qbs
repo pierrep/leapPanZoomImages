@@ -19,7 +19,7 @@ Project{
 
         of.addons: [
             'ofxLeapMotion2',
-            'ofxThreadedImageLoader',
+            'ofxThreadedImageLoaderProgress',
             'ofxTween',
             'ofxPoco',
         ]

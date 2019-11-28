@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxLeapMotion2.h"
-#include "ofxThreadedImageLoader.h"
+#include "ofxThreadedImageLoaderProgress.h"
 #include "ofxTween.h"
 
 #define TILE_SIZE 4

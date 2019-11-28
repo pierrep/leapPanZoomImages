@@ -109,9 +109,7 @@ void ofApp::draw()
     }
 
     if (loader.getProgress() < 1.0f) {
-        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4, ofGetHeight() / 2, 0, ofGetWidth() / 2, 20, 5);
-        ofSetColor(255, 0, 0);
-        ofDrawRectRounded(ofGetWidth() / 2 - ofGetWidth() / 4 + 2, ofGetHeight() / 2 + 2, 1, loader.getProgress() * (ofGetWidth() / 2) - 4, 16, 5);
+        loader.draw();
     } else {
 
         ofPushMatrix();
