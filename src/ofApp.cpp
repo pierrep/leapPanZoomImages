@@ -141,7 +141,7 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
 {
     unsigned int duration = 2000;
     unsigned int delay = 500;
-    unsigned int move = 200;
+    unsigned int move = 400;
     float zoom = 0.02f + (scaleFactor)*0.08f;
 
     if ((ofGetElapsedTimeMillis() - currentTime) < delay) {
@@ -152,22 +152,22 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
 
         if (args.type == GestureType::SWIPE_RIGHT) {
             ofLogNotice() << "Swipe Right";
-            tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
+            tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_LEFT) {
             ofLogNotice() << "Swipe Left";
-            tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
+            tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_FORWARD) {
             ofLogNotice() << "Swipe Forward ";
-            tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
+            tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_BACK) {
             ofLogNotice() << "Swipe Back ";
-            tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
+            tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::CIRCLE_CLOCKWISE) {
@@ -208,6 +208,7 @@ void ofApp::drawHands()
         ofPoint handPos = leap.getMappedofPoint(leapHands[i].palmPosition());
         ofPoint handNormal = leap.getofPoint(leapHands[i].palmNormal());
 
+        ofPushStyle();
         ofSetColor(0, 0, 255);
         ofDrawSphere(handPos.x, handPos.y, handPos.z, 20);
         ofSetColor(255, 255, 0);
@@ -232,6 +233,7 @@ void ofApp::drawHands()
             ofDrawLine(pip.x, pip.y, pip.z, dip.x, dip.y, dip.z);
             ofDrawLine(dip.x, dip.y, dip.z, tip.x, tip.y, tip.z);
         }
+        ofPopStyle();
     }
 }
 
