@@ -133,6 +133,8 @@ void ofApp::draw()
         cam.begin();
         drawHands();
         cam.end();
+        string s = "xt: " + ofToString(xt) + " yt: " + ofToString(yt) + " zt:" + ofToString(zt);
+        ofDrawBitmapString(s,20,ofGetHeight()-20);
     }
 }
 
