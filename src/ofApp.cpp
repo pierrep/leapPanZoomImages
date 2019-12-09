@@ -6,6 +6,8 @@ void ofApp::setup()
     ofSetFrameRate(60);
     ofSetVerticalSync(true);
     ofSetLogLevel(OF_LOG_NOTICE);
+    ofEnableAntiAliasing();
+    ofHideCursor();
 
     leap.open();
     leap.setReceiveBackgroundFrames(true); // keep app receiving data from leap motion even when it's in the background
@@ -13,8 +15,13 @@ void ofApp::setup()
 
     ofAddListener(leap.gestureEvent, this, &ofApp::leapGestureEvent);
 
-    cam.enableOrtho();
-    ofEnableDepthTest();
+    //cam.enableOrtho();
+    cam.setNearClip(0.1f);
+    cam.setFarClip(35000.0f);
+    cam.lookAt(glm::vec3(0,0,0));
+
+    ofLogNotice() << "Far clip: " << cam.getFarClip() << "  Near clip: " << cam.getNearClip();
+    //ofEnableDepthTest();
 
     checkHardwareCapabilities();
 
@@ -26,16 +33,16 @@ void ofApp::setup()
             }
         }
     }
-    currentImage = 1;
-    scaleFactor = 1.5;
+    currentImage = 0;
+    scaleFactor = 1;
     bDebug = true;
     currentTime = ofGetElapsedTimeMillis();
     xt = ofGetWidth() / 2;
-    yt = ofGetHeight() / 2;
-    zt = 0;
+    yt = -10000;
+    zt = -10000;
     tween_x.setParameters(4, easingexpo, ofxTween::easeOut, xt, xt, 0, 0);
     tween_y.setParameters(5, easingexpo, ofxTween::easeOut, yt, yt, 0, 0);
-    tween_z.setParameters(6, easingexpo, ofxTween::easeOut, scaleFactor, scaleFactor, 0, 0);
+    tween_z.setParameters(6, easingexpo, ofxTween::easeOut, zt, zt, 0, 0);
 }
 
 //--------------------------------------------------------------
@@ -67,31 +74,28 @@ void ofApp::update()
         handsFound = 0;
     }
 
-    if (hands.size() == 2) {
-        ofPoint hp1 = leap.getofPoint(hands[0].palmPosition());
-        ofPoint hp2 = leap.getofPoint(hands[1].palmPosition());
-        float distance = hp1.distance(hp2);
+    if (loader.getProgress() >= 1.0f) {
+        xt = tween_x.update();
+        yt = tween_y.update();
+        zt = tween_z.update();
+        if (zt > -700.0) {
+            zt = -700.0f;
+        }
+        if (zt < -28000) {
+            zt = -28000;
+        }
 
-        if (distance < 120)
-            scaleFactor += 0.01f;
-        if (distance > 220)
-            scaleFactor -= 0.01f;
-        cout << "distance = " << distance << "  scale factor: " << scaleFactor << endl;
+        float xmax = ofMap(zt,-28000,-700,500,29000);
+        float xmin = ofMap(zt,-700,-28000,-29000,-2000);
+        float ymax = ofMap(zt,-28000,-700,-5000, 9500);
+        float ymin = ofMap(zt,-700,-28000,-30000,-15000);
 
-        if (scaleFactor > 1.5f)
-            scaleFactor = 1.5f;
-        if (scaleFactor < 0.1f)
-            scaleFactor = 0.1f;
-    }
+        if(xt > xmax) xt = xmax;
+        if(xt < xmin) xt = xmin;
+        if(yt > ymax) yt = ymax;
+        if(yt < ymin) yt = ymin;
 
-    xt = tween_x.update();
-    yt = tween_y.update();
-    scaleFactor = tween_z.update();
-    if (scaleFactor > 1.5f) {
-        scaleFactor = 1.5f;
-    }
-    if (scaleFactor < 0.1f) {
-        scaleFactor = 0.1f;
+        ofLogNotice() << "xmin: " << xmin << " xmax: " << xmax << " ymin:" << ymin << " ymax: " << ymax;
     }
 
     leap.markFrameAsOld();
@@ -100,41 +104,49 @@ void ofApp::update()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+    ofSetWindowTitle(ofToString(ofGetFrameRate()));
     ofBackgroundGradient(ofColor(90, 90, 90), ofColor(30, 30, 30), OF_GRADIENT_BAR);
-
-    if (bDebug) {
-        ofSetColor(200);
-        ofDrawBitmapString("Leap Connected? " + ofToString(leap.isConnected()) + "\n Hands found? " + ofToString(handsFound), 20, 20);
-        ofDrawBitmapString("", 20, 60);
-    }
 
     if (loader.getProgress() < 1.0f) {
         loader.draw();
-    } else {
-
+        if (loader.getProgress() >= 0.95f) {
+            bDebug = false;
+        }
+    } else {        
+        cam.begin();
         ofPushMatrix();
         ofTranslate(xt, yt, zt);
         ofScale(scaleFactor, scaleFactor, scaleFactor);
+        ofSetColor(255);
         for (int rows = 0; rows < TILE_SIZE; rows++) {
+
             for (int cols = 0; cols < TILE_SIZE; cols++) {
-                if (img[currentImage][rows][cols].isAllocated()) {
-                    //ofSetColor(255,0,0);
-                    const float w = img[currentImage][rows][cols].getWidth();
-                    const float h = img[currentImage][rows][cols].getHeight();
-                    img[currentImage][rows][cols].draw(-w * 2 + rows * w, -h * 2 + cols * h);
+                if (img[currentImage][rows][cols].isAllocated()) {                    
+                    //if(rows % 2 == 0) ofSetColor(0,0,255);
+                    //else ofSetColor(255,0,0);
+                    const float w = img[currentImage][cols][rows].getWidth();
+                    const float h = img[currentImage][cols][rows].getHeight();
+                    img[currentImage][cols][rows].draw(-w * 2 + cols * w, h * 2 - rows * h);
                 }
             }
         }
 
         ofPopMatrix();
+        cam.end();
     }
 
     if (bDebug) {
         cam.begin();
         drawHands();
         cam.end();
+        ofSetColor(0,255,0);
         string s = "xt: " + ofToString(xt) + " yt: " + ofToString(yt) + " zt:" + ofToString(zt);
         ofDrawBitmapString(s,20,ofGetHeight()-20);
+        ofDrawBitmapString(ofToString(ofGetFrameRate()),ofGetWidth()-50,20);
+        ofSetColor(200);
+        ofDrawBitmapString("Leap Connected? " + ofToString(leap.isConnected()) + "\n Hands found? " + ofToString(handsFound), 20, 20);
+        ofDrawBitmapString("", 20, 60);
+        ofSetColor(255);
     }
 }
 
@@ -143,8 +155,8 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
 {
     unsigned int duration = 2000;
     unsigned int delay = 500;
-    unsigned int move = 400;
-    float zoom = 0.02f + (scaleFactor)*0.08f;
+    unsigned int move = 400 + fabs(zt*0.1f);
+    float zoom = 400 + fabs(zt*0.1f);//0.02f + (scaleFactor)*0.08f;
 
     if ((ofGetElapsedTimeMillis() - currentTime) < delay) {
         return;
@@ -173,15 +185,17 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::CIRCLE_CLOCKWISE) {
-            ofLogNotice() << "Circle Clockwise";
-            tween_z.setParameters(5, easingexpo, ofxTween::easeOut, scaleFactor, scaleFactor + zoom, duration, 0);
+            ofLogNotice() << "Circle Clockwise zt = " << zt;
+            tween_z.setParameters(5, easingexpo, ofxTween::easeOut, zt, zt + zoom, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::CIRCLE_ANTICLOCKWISE) {
-            ofLogNotice() << "Circle Anti-clockwise";
-            tween_z.setParameters(6, easingexpo, ofxTween::easeOut, scaleFactor, scaleFactor - zoom, duration, 0);
+            ofLogNotice() << "Circle Anti-clockwise zt = " << zt;
+            tween_z.setParameters(6, easingexpo, ofxTween::easeOut, zt, zt - zoom, duration, 0);
             currentTime = ofGetElapsedTimeMillis();
         }
+
+        ofLogNotice() << "xt: "<< xt << " yt: " << yt << " zt: " << zt;
     }
 }
 
@@ -206,6 +220,7 @@ void ofApp::exit()
 void ofApp::drawHands()
 {
     vector<Hand> leapHands = leap.getLeapHands();
+    ofPushStyle();
     for (unsigned int i = 0; i < leapHands.size(); i++) {
         ofPoint handPos = leap.getMappedofPoint(leapHands[i].palmPosition());
         ofPoint handNormal = leap.getofPoint(leapHands[i].palmNormal());
@@ -237,6 +252,7 @@ void ofApp::drawHands()
         }
         ofPopStyle();
     }
+    ofPopStyle();
 }
 
 //--------------------------------------------------------------
