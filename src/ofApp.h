@@ -5,8 +5,14 @@
 #include "ofxThreadedImageLoaderProgress.h"
 #include "ofxTween.h"
 
-#define TILE_SIZE 4
-#define NUM_IMAGES 2
+//#define TILE_SIZE 4
+
+#define TILE_ROWS 10
+#define TILE_COLS 15
+#define TILE_ROWS_TEST 10
+#define TILE_COLS_TEST 15
+
+#define NUM_IMAGES 1
 
 class ofApp : public ofBaseApp{
     
@@ -18,6 +24,7 @@ public:
     void exit();
     void drawHands();
     void checkHardwareCapabilities();
+    void loadImages();
     void leapGestureEvent(GestureEventArgs& args);
     
 	ofxLeapMotion leap;
@@ -25,10 +32,9 @@ public:
     
     unsigned int handsFound;
     ofCamera cam;
-    float scaleFactor;
     float xt,yt,zt;
 
-    ofImage img[NUM_IMAGES][TILE_SIZE][TILE_SIZE];
+    ofImage img[NUM_IMAGES][TILE_ROWS][TILE_COLS];
     ofxThreadedImageLoader loader;
     int currentImage;
 
@@ -39,5 +45,16 @@ public:
     ofxTween tween_z;
     ofxEasingExpo 	easingexpo;
 
+    //Zoom min-max variables
+    float xmax;
+    float xmin;
+    float ymax;
+    float ymin;
+
+    unsigned int move;
+    float zoom;
+
     float currentTime;
+
+    bool bLandscapeOrientation;
 };

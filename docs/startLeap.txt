@@ -1,0 +1,12 @@
+##  ln -s /lib/systemd/system/leapd.service /etc/systemd/system/leapd.service
+##  systemctl daemon-reload
+
+https://forums.leapmotion.com/t/tip-ubuntu-systemd-and-leapd/2118
+
+To autostart, make sure you type - sudo systemctl enable leapd
+
+Also try:
+sudo leapd
+LeapControlPanel --showsettings
+
+https://blog.keithkim.com/2020/07/note-leap-motion-on-ubuntu-2004.html

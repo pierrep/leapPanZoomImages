@@ -8,6 +8,7 @@ void ofApp::setup()
     ofSetLogLevel(OF_LOG_NOTICE);
     ofEnableAntiAliasing();
     ofHideCursor();
+    checkHardwareCapabilities();
 
     leap.open();
     leap.setReceiveBackgroundFrames(true); // keep app receiving data from leap motion even when it's in the background
@@ -15,34 +16,25 @@ void ofApp::setup()
 
     ofAddListener(leap.gestureEvent, this, &ofApp::leapGestureEvent);
 
-    //cam.enableOrtho();
     cam.setNearClip(0.1f);
     cam.setFarClip(35000.0f);
     cam.lookAt(glm::vec3(0,0,0));
 
     ofLogNotice() << "Far clip: " << cam.getFarClip() << "  Near clip: " << cam.getNearClip();
-    //ofEnableDepthTest();
 
-    checkHardwareCapabilities();
+    loadImages();
 
-    for (int i = 0; i < NUM_IMAGES; i++) {
-        for (int rows = 0; rows < TILE_SIZE; rows++) {
-            for (int cols = 0; cols < TILE_SIZE; cols++) {
-                string filename = "image" + ofToString(i + 1) + "/tile_" + ofToString(rows + 1) + "_" + ofToString(cols + 1) + ".jpg";
-                loader.loadFromDisk(img[i][rows][cols], filename);
-            }
-        }
-    }
     currentImage = 0;
-    scaleFactor = 1;
     bDebug = true;
     currentTime = ofGetElapsedTimeMillis();
-    xt = ofGetWidth() / 2;
-    yt = -10000;
-    zt = -10000;
+    xt = -20000;
+    yt =  10000;
+    zt = -28000;
     tween_x.setParameters(4, easingexpo, ofxTween::easeOut, xt, xt, 0, 0);
     tween_y.setParameters(5, easingexpo, ofxTween::easeOut, yt, yt, 0, 0);
     tween_z.setParameters(6, easingexpo, ofxTween::easeOut, zt, zt, 0, 0);
+
+    bLandscapeOrientation = false;
 }
 
 //--------------------------------------------------------------
@@ -74,28 +66,50 @@ void ofApp::update()
         handsFound = 0;
     }
 
-    if (loader.getProgress() >= 1.0f) {
+//    if (loader.getProgress() >= 1.0f) {
+//        xt = tween_x.update();
+//        yt = tween_y.update();
+//        zt = tween_z.update();
+//        if (zt > -700.0) {
+//            zt = -700.0f;
+//        }
+//        if (zt < -28000) {
+//            zt = -28000;
+//        }
+
+//        float xmax = ofMap(zt,-28000,-700,500,29000);
+//        float xmin = ofMap(zt,-700,-28000,-29000,-2000);
+//        float ymax = ofMap(zt,-28000,-700,-5000, 9500);
+//        float ymin = ofMap(zt,-700,-28000,-30000,-15000);
+
+//        if(xt > xmax) xt = xmax;
+//        if(xt < xmin) xt = xmin;
+//        if(yt > ymax) yt = ymax;
+//        if(yt < ymin) yt = ymin;
+
+//        ofLogVerbose() << "xmin: " << xmin << " xmax: " << xmax << " ymin:" << ymin << " ymax: " << ymax;
+//    }
+
+    {
         xt = tween_x.update();
         yt = tween_y.update();
         zt = tween_z.update();
-        if (zt > -700.0) {
-            zt = -700.0f;
+        if (zt > -500.0) {
+            zt = -500.0f;
         }
         if (zt < -28000) {
             zt = -28000;
         }
 
-        float xmax = ofMap(zt,-28000,-700,500,29000);
-        float xmin = ofMap(zt,-700,-28000,-29000,-2000);
-        float ymax = ofMap(zt,-28000,-700,-5000, 9500);
-        float ymin = ofMap(zt,-700,-28000,-30000,-15000);
+        xmax = ofMap(zt,-28000,-500,-18500,9700);
+        xmin = ofMap(zt,-500,-28000,-50500,-22450);
+        ymax = ofMap(zt,-28000,-500, 14500, 30300);
+        ymin = ofMap(zt,-500,-28000, -9900,6000);
 
         if(xt > xmax) xt = xmax;
         if(xt < xmin) xt = xmin;
         if(yt > ymax) yt = ymax;
         if(yt < ymin) yt = ymin;
-
-        ofLogNotice() << "xmin: " << xmin << " xmax: " << xmax << " ymin:" << ymin << " ymax: " << ymax;
     }
 
     leap.markFrameAsOld();
@@ -107,30 +121,26 @@ void ofApp::draw()
     ofSetWindowTitle(ofToString(ofGetFrameRate()));
     ofBackgroundGradient(ofColor(90, 90, 90), ofColor(30, 30, 30), OF_GRADIENT_BAR);
 
-    if (loader.getProgress() < 1.0f) {
-        loader.draw();
-        if (loader.getProgress() >= 0.95f) {
-            bDebug = false;
-        }
-    } else {        
+    // Draw images
+    {
         cam.begin();
         ofPushMatrix();
+        ofSetRectMode(OF_RECTMODE_CENTER);
         ofTranslate(xt, yt, zt);
-        ofScale(scaleFactor, scaleFactor, scaleFactor);
         ofSetColor(255);
-        for (int rows = 0; rows < TILE_SIZE; rows++) {
 
-            for (int cols = 0; cols < TILE_SIZE; cols++) {
-                if (img[currentImage][rows][cols].isAllocated()) {                    
-                    //if(rows % 2 == 0) ofSetColor(0,0,255);
-                    //else ofSetColor(255,0,0);
-                    const float w = img[currentImage][cols][rows].getWidth();
-                    const float h = img[currentImage][cols][rows].getHeight();
-                    img[currentImage][cols][rows].draw(-w * 2 + cols * w, h * 2 - rows * h);
+        for (int rows = 0; rows < TILE_ROWS; rows++) {
+            for (int cols = 0; cols < TILE_COLS; cols++) {
+                if (img[currentImage][rows][cols].isAllocated()) {
+                    const float w = img[currentImage][rows][cols].getWidth();
+                    const float h = img[currentImage][rows][cols].getHeight();
+                    if(img[currentImage][rows][cols].isAllocated()) {
+                        img[currentImage][rows][cols].draw(-w * 2 + cols * w, h * 2 - rows * h);
+                    }
                 }
             }
         }
-
+        ofSetRectMode(OF_RECTMODE_CORNER);
         ofPopMatrix();
         cam.end();
     }
@@ -142,11 +152,20 @@ void ofApp::draw()
         ofSetColor(0,255,0);
         string s = "xt: " + ofToString(xt) + " yt: " + ofToString(yt) + " zt:" + ofToString(zt);
         ofDrawBitmapString(s,20,ofGetHeight()-20);
-        ofDrawBitmapString(ofToString(ofGetFrameRate()),ofGetWidth()-50,20);
+        ofDrawBitmapString(ofToString(ofGetFrameRate()),ofGetWidth()-80,20);
         ofSetColor(200);
-        ofDrawBitmapString("Leap Connected? " + ofToString(leap.isConnected()) + "\n Hands found? " + ofToString(handsFound), 20, 20);
-        ofDrawBitmapString("", 20, 60);
+        ofDrawBitmapString("Leap Connected? " + ofToString(leap.isConnected()) + "\nHands found? " + ofToString(handsFound), 20, 20);
+        string ls = bLandscapeOrientation?"yes":"no";
+        ofDrawBitmapString("Landscape Orientation? " + ls, 20, 45);
+        ofDrawBitmapString("Zoom = "+ofToString(zoom) + "  Move = "+ofToString(move), 20, 60);
         ofSetColor(255);
+    }
+
+    if (loader.getProgress() < 1.0f) {
+        loader.draw();
+        if (loader.getProgress() >= 0.95f) {
+            bDebug = false;
+        }
     }
 }
 
@@ -155,8 +174,8 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
 {
     unsigned int duration = 2000;
     unsigned int delay = 500;
-    unsigned int move = 400 + fabs(zt*0.1f);
-    float zoom = 400 + fabs(zt*0.1f);//0.02f + (scaleFactor)*0.08f;
+    move = 2000 + fabs(zt*0.25f);
+    zoom = 600 + fabs(zt*0.2f);
 
     if ((ofGetElapsedTimeMillis() - currentTime) < delay) {
         return;
@@ -166,22 +185,50 @@ void ofApp::leapGestureEvent(GestureEventArgs& args)
 
         if (args.type == GestureType::SWIPE_RIGHT) {
             ofLogNotice() << "Swipe Right";
-            tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
+//            tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
+//            currentTime = ofGetElapsedTimeMillis();
+
+            if(bLandscapeOrientation) {
+                tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
+            } else {
+                tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
+            }
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_LEFT) {
             ofLogNotice() << "Swipe Left";
-            tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
+//            tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
+//            currentTime = ofGetElapsedTimeMillis();
+
+            if(bLandscapeOrientation) {
+                tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
+            } else {
+                tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
+            }
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_FORWARD) {
             ofLogNotice() << "Swipe Forward ";
-            tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
+//            tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
+//            currentTime = ofGetElapsedTimeMillis();
+
+            if(bLandscapeOrientation) {
+                tween_y.setParameters(3, easingexpo, ofxTween::easeOut, yt, yt - move, duration, 0);
+            } else {
+                tween_x.setParameters(1, easingexpo, ofxTween::easeOut, xt, xt + move, duration, 0);
+            }
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::SWIPE_BACK) {
             ofLogNotice() << "Swipe Back ";
-            tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
+//            tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
+//            currentTime = ofGetElapsedTimeMillis();
+
+            if(bLandscapeOrientation) {
+                tween_y.setParameters(4, easingexpo, ofxTween::easeOut, yt, yt + move, duration, 0);
+            } else {
+                tween_x.setParameters(2, easingexpo, ofxTween::easeOut, xt, xt - move, duration, 0);
+            }
             currentTime = ofGetElapsedTimeMillis();
         }
         if (args.type == GestureType::CIRCLE_CLOCKWISE) {
@@ -206,7 +253,8 @@ void ofApp::keyPressed(int key)
         bDebug = !bDebug;
     }
     if (key == ' ') {
-        currentImage = !currentImage;
+        //currentImage = !currentImage;
+        bLandscapeOrientation = !bLandscapeOrientation;
     }
 }
 
@@ -260,5 +308,37 @@ void ofApp::checkHardwareCapabilities()
 {
     int maxSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-    ofLogNotice() << "Maximum texture size = " << maxSize;
+    ofLogNotice() << "Maximum texture size = " << maxSize << " x " << maxSize << " pixels" ;
+
+    //This is LINUX specific
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    long totalSystemMemory = pages * page_size / (1024*1024);
+    ofLogNotice() << "Total System Memory = " << totalSystemMemory << "GB RAM (need at least 16GB to load this app";    
+}
+
+//--------------------------------------------------------------
+void ofApp::loadImages(){
+    int num_tiles = 0;
+    for (int i = 0; i < NUM_IMAGES; i++) {
+        for (int rows = 0; rows < TILE_ROWS; rows++) {
+            for (int cols = 0; cols < TILE_COLS; cols++) {
+                ostringstream count;
+                count << setw(4) << setfill('0') << num_tiles;
+                ostringstream rownum;
+                rownum << setw(2) << setfill('0') << ofToString(rows);
+                ostringstream colnum;
+                colnum << setw(2) << setfill('0') << ofToString(cols);
+
+                string suffix = "_15-10";
+                string filename = "image" + ofToString(i + 1) + "/NanoTile_" + count.str() + "_" + colnum.str() + "-" + rownum.str() + suffix + ".jpg";
+                cout << "filename = " << filename << endl;
+
+                if((rows < TILE_ROWS_TEST) && (cols < TILE_COLS_TEST)) {
+                    loader.loadFromDisk(img[i][rows][cols], filename);
+                }
+                num_tiles++;
+            }
+        }
+    }
 }

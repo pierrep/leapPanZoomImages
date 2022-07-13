@@ -1,4 +1,0 @@
-##  ln -s /lib/systemd/system/leapd.service /etc/systemd/system/leapd.service
-##  systemctl daemon-reload
-
-https://forums.leapmotion.com/t/tip-ubuntu-systemd-and-leapd/2118
